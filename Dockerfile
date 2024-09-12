@@ -1,14 +1,17 @@
-# ใช้ PHP เป็นพื้นฐาน
-FROM php:8.2-apache
+FROM romeoz/docker-apache-php:7.3
 
-# ตั้งค่า Directory
-WORKDIR /var/www/html
+ENV APACHE_CONF_DIR=/etc/apache2 \
+    PHP_CONF_DIR=/etc/php/7.3 \
+    PHP_DATA_DIR=/var/lib/php 
 
-# คัดลอกโค้ด PHP ไปที่ Docker image
-COPY . /var/www/html/
+COPY ./configuration/php7conf/uploads.ini ${PHP_CONF_DIR}/apache2/conf.d/custom.ini
+COPY ./configuration/prefox.conf ${APACHE_CONF_DIR}/mods-enabled/mpm_prefork.conf
+COPY ./configuration/app.conf ${APACHE_CONF_DIR}/sites-enabled/app.conf
+COPY ./configuration/apache2.conf ${APACHE_CONF_DIR}/apache2.conf
 
-# ติดตั้ง dependencies ที่จำเป็น (ถ้ามี)
-RUN docker-php-ext-install mysqli
+# APP 
+COPY ./ /var/www/app/
 
-# เปิดใช้งาน Apache mod_rewrite
-RUN a2enmod rewrite
+RUN rm -rf /var/www/app/configuration
+RUN chmod -R 755 /var/www/app
+RUN chown www-data:www-data /var/www/app -Rf
